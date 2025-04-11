@@ -1,4 +1,4 @@
-name: Package and Upload Artifact
+name: Direct Package Artifact
 
 on:
   push:
@@ -7,33 +7,26 @@ on:
     branches: [ main ]
 
 jobs:
-  package-and-upload:
+  package:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Create and prepare artifact directory
+
+    - name: Validate source directory
       run: |
-        # 创建带有空格的目录结构
-        mkdir -p "artifact/Flashback Translations"
-        
-        # 检查源目录是否存在
-        if [ -d "Flashback Translations" ]; then
-          # 使用rsync处理复制，更可靠
-          rsync -a "Flashback Translations/" "artifact/Flashback Translations/"
-        else
-          echo "Error: Source directory 'Flashback Translations' not found!"
+        if [ ! -d "Flashback Translations" ]; then
+          echo "❌ 错误：找不到 'Flashback Translations' 目录"
           exit 1
         fi
-        
-    - name: Zip the artifact
+
+    - name: Create flat structure
       run: |
-        cd artifact
+        # 直接打包源目录内容（不创建中间目录）
+        cd "Flashback Translations"
         zip -r ../Flashback-Translations-NEXT.zip .
-        cd ..
-        
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
