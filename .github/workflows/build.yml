@@ -2,9 +2,9 @@ name: Package and Upload Artifact
 
 on:
   push:
-    branches: [ main ]  # 可以根据需要修改分支名
+    branches: [ main ]
   pull_request:
-    branches: [ main ]  # 可以根据需要修改分支名
+    branches: [ main ]
 
 jobs:
   package-and-upload:
@@ -14,10 +14,19 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Create artifact directory structure
+    - name: Create and prepare artifact directory
       run: |
-        mkdir -p artifact/Flashback Translations
-        cp -r "Flashback Translations/"* "artifact/Flashback Translations/"
+        # 创建带有空格的目录结构
+        mkdir -p "artifact/Flashback Translations"
+        
+        # 检查源目录是否存在
+        if [ -d "Flashback Translations" ]; then
+          # 使用rsync处理复制，更可靠
+          rsync -a "Flashback Translations/" "artifact/Flashback Translations/"
+        else
+          echo "Error: Source directory 'Flashback Translations' not found!"
+          exit 1
+        fi
         
     - name: Zip the artifact
       run: |
