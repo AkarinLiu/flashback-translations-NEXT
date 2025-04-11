@@ -1,0 +1,32 @@
+name: Package and Upload Artifact
+
+on:
+  push:
+    branches: [ main ]  # 可以根据需要修改分支名
+  pull_request:
+    branches: [ main ]  # 可以根据需要修改分支名
+
+jobs:
+  package-and-upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Create artifact directory structure
+      run: |
+        mkdir -p artifact/Flashback Translations
+        cp -r "Flashback Translations/"* "artifact/Flashback Translations/"
+        
+    - name: Zip the artifact
+      run: |
+        cd artifact
+        zip -r ../Flashback-Translations-NEXT.zip .
+        cd ..
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Flashback-Translations-NEXT
+        path: Flashback-Translations-NEXT.zip
