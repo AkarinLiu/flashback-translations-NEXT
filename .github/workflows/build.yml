@@ -1,14 +1,18 @@
-name: Direct Package Artifact
+name: Release Packaging
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  release:
+    types: [published]
 
 jobs:
-  package:
+  package-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 需要权限来修改 Release
 
     steps:
     - name: Checkout code
@@ -17,18 +21,30 @@ jobs:
     - name: Validate source directory
       run: |
         if [ ! -d "Flashback Translations" ]; then
-          echo "❌ 错误：找不到 'Flashback Translations' 目录"
+          echo "::error::❌ 源目录 'Flashback Translations' 不存在"
           exit 1
         fi
 
-    - name: Create flat structure
+    - name: Create ZIP package
       run: |
-        # 直接打包源目录内容（不创建中间目录）
         cd "Flashback Translations"
         zip -r ../Flashback-Translations-NEXT.zip .
+        echo "PACKAGE_PATH=$(pwd)/../Flashback-Translations-NEXT.zip" >> $GITHUB_ENV
 
-    - name: Upload artifact
+    - name: Upload Artifact (Non-Release)
+      if: github.event_name != 'release'
       uses: actions/upload-artifact@v4
       with:
         name: Flashback-Translations-NEXT
-        path: Flashback-Translations-NEXT.zip
+        path: ${{ env.PACKAGE_PATH }}
+
+    - name: Upload to Release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ env.PACKAGE_PATH }}
+        asset_name: Flashback-Translations-NEXT.zip
+        asset_content_type: application/zip
